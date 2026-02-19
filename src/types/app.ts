@@ -64,11 +64,11 @@ export interface Anmeldungen {
 }
 
 export const APP_IDS = {
-  DOZENTEN: '69972e288acb56f981432fd1',
-  TEILNEHMER: '69972e28609fe2d39a312d14',
-  RAEUME: '69972e28b164f2963b72d0e0',
-  KURSE: '69972e29bd19bb0815af2306',
-  ANMELDUNGEN: '69972e296e42b5c994ada5f6',
+  DOZENTEN: '699732735e64c69dd1506eee',
+  TEILNEHMER: '69973273acfa4fde602bdaab',
+  RAEUME: '699732749356d1435fd976f7',
+  KURSE: '699732745c746e5daa8375e1',
+  ANMELDUNGEN: '69973274c1bbcd53c9e27968',
 } as const;
 
 // Helper Types for creating new records

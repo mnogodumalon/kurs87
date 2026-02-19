@@ -84,13 +84,12 @@ export function AnmeldungenDialog({ open, onClose, onSubmit, defaultValues, teil
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="anmeldedatum">Anmeldedatum *</Label>
+            <Label htmlFor="anmeldedatum">Anmeldedatum</Label>
             <Input
               id="anmeldedatum"
               type="date"
               value={fields.anmeldedatum ?? ''}
               onChange={e => setFields(f => ({ ...f, anmeldedatum: e.target.value }))}
-              required
             />
           </div>
           <div className="space-y-2">

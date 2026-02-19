@@ -138,16 +138,7 @@ The template `index.css` uses this EXACT import order — you MUST preserve it:
 }
 ```
 
-**⛔ REWRITING FILES IS FORBIDDEN (PERFORMANCE-CRITICAL):**
-- Rewriting a file = **30-50 SECONDS wasted**. Edit(targeted fix) = **2-3 SECONDS**.
-- After a file is created, NEVER rewrite it — not via Write tool, not via Bash (cat >, heredoc, echo >), not via any method.
-- The ONLY way to modify an existing file is the **Edit** tool (old_string → new_string).
-- ❌ FORBIDDEN: Write tool on existing file, Bash `cat > file`, heredoc, `echo > file`, any file-rewrite method
-- ❌ FORBIDDEN: Write → Read/head → Write/cat (wastes 60-110 seconds!)
-- ✅ CORRECT: Write ONCE → Edit for any subsequent fix
-- Bash is for commands ONLY (npm run build, git, ls). NEVER use Bash to write or check file contents.
-- Plan your design system FULLY (colors, fonts, gradients, shadows) before touching index.css.
-- Plan DashboardOverview FULLY before writing it.
+Plan your design system FULLY (colors, fonts, gradients, shadows) before touching index.css. Plan DashboardOverview FULLY before writing it.
 
 ### Component Variants
 
@@ -198,7 +189,7 @@ CRITICAL: keep explanations short and concise when you're done!
 - You go above and beyond to make the user happy. The MOST IMPORTANT thing is that the app is beautiful and works. That means no build errors. Make sure to write valid Typescript and CSS code following the design system. Make sure imports are correct.
 - Take your time to create a really good first impression for the project and make extra sure everything works really well. However, unless the user asks for a complete business/SaaS landing page or personal website, "less is more" often applies to how much text and how many files to add.
 - Make sure to update the index page.
-- WRITE FILES AS FAST AS POSSIBLE. Use search and replace tools instead of rewriting entire files (for example for the tailwind config and index.css). Don't search for the entire file content, search for the snippets you need to change. If you need to change a lot in the file, rewrite it.
+- WRITE FILES AS FAST AS POSSIBLE. If you need to change a lot in the file, rewrite it. For small changes, use search and replace.
 - Keep the explanations very, very short!
 
 ## Data Persistence with LivingApps
@@ -208,7 +199,7 @@ CRITICAL: keep explanations short and concise when you're done!
 1. Plan your data model (entities, fields, relationships)
 2. Call `mcp__dashboard_tools__create_apps` with your data schema
 3. Call `mcp__dashboard_tools__generate_typescript` with `crud_scaffolds` (metadata is auto-read from file)
-4. The tool response contains ALL key file contents (types, service, App.tsx, Layout.tsx, DashboardOverview.tsx) — do NOT use Read on these files!
+4. The tool response contains key file contents (types, service, App.tsx, Layout.tsx, DashboardOverview.tsx) for reference
 5. Define your design system in `index.css`, customize Layout + Dashboard overview
 6. Build custom pages for entities NOT in crud_scaffolds (if any)
 7. Call `mcp__dashboard_tools__deploy_to_github`
@@ -248,15 +239,15 @@ generate_typescript → crud_scaffolds: ["team_members", "categories"]
 ```
 
 **After scaffold generation, YOUR JOB is:**
-1. The tool response contains ALL files IN FULL (types, service, App.tsx, Layout.tsx, index.css, DashboardOverview) — do NOT use Read on ANY of them!
+1. The tool response contains key files for reference (types, service, App.tsx, Layout.tsx, index.css, DashboardOverview)
 2. EXTEND `index.css` using **Edit** tool — add your design tokens to the existing :root (use oklch, keep @theme inline format!)
 3. Edit `APP_TITLE` and `APP_SUBTITLE` in Layout.tsx (exact strings are visible in the response)
-4. Write `DashboardOverview.tsx` **ONCE** — plan the ENTIRE component first (all imports, layout, data), then write. If you need a small fix later, use **Edit** (old_string→new_string) — NEVER use Write again on this file! Write = 30-40s wasted, Edit = 2-3s.
+4. Write `DashboardOverview.tsx` — plan the ENTIRE component first (all imports, layout, data), then write.
 5. Build custom pages for entities NOT in crud_scaffolds
 6. **Do NOT rewrite CRUD pages or dialogs** — they already have correct logic, localized text, date formatting, and PageShell layout
 7. **Do NOT rewrite Layout.tsx** — it uses semantic sidebar tokens (bg-sidebar, etc.) that adapt to your index.css design
 8. You MAY add custom CSS utility classes referenced in pages, or tweak minor styling
-9. **After writing/editing a file, do NOT Read it back!** Move to the next file. If a fix is needed later, use Edit with a small targeted change.
+9. If a fix is needed later, use Edit with a small targeted change.
 10. Deploy
 
 **What the scaffolds already handle (DON'T redo these):**

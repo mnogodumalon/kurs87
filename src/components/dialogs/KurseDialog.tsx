@@ -68,13 +68,12 @@ export function KurseDialog({ open, onClose, onSubmit, defaultValues, dozentenLi
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="startdatum">Startdatum *</Label>
+            <Label htmlFor="startdatum">Startdatum</Label>
             <Input
               id="startdatum"
               type="date"
               value={fields.startdatum ?? ''}
               onChange={e => setFields(f => ({ ...f, startdatum: e.target.value }))}
-              required
             />
           </div>
           <div className="space-y-2">

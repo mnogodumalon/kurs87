@@ -495,56 +495,42 @@ async def main():
             response_text = f"Generated {len(generated_files)} files:\n"
             response_text += "\n".join(f"  - {f}" for f in generated_files)
             
-            # ═══════════════════════════════════════════════════════
-            # INSTRUCTIONS FIRST — before any file contents
-            # ═══════════════════════════════════════════════════════
             if crud_scaffolds:
                 non_scaffolded = [k for k in app_names if k not in crud_scaffolds]
                 response_text += f"\n\n{'='*60}"
-                response_text += "\n⛔⛔⛔ ABSOLUTE CONSTRAINTS — VIOLATIONS WASTE 30-50 SECONDS EACH ⛔⛔⛔"
+                response_text += "\n📋 HINTS"
                 response_text += f"\n{'='*60}"
                 response_text += "\n"
-                response_text += "\nREWRITING FILES IS FORBIDDEN — not via Write, not via Bash (cat >, heredoc, echo >), not via ANY method."
-                response_text += "\nThe ONLY way to modify an existing file is the Edit tool (old_string → new_string). Edit = 2-3s. Rewrite = 30-50s."
+                response_text += "\n1. CSS FORMAT: index.css uses oklch() colors and @theme inline — NOT hsl()!"
+                response_text += "\n   EXTEND the existing :root block — do NOT rewrite from scratch."
+                response_text += "\n   CSS import order MUST be: @import url(...) FIRST, then @import \"tailwindcss\", then @import \"tw-animate-css\"."
                 response_text += "\n"
-                response_text += "\n1. DashboardOverview.tsx — Write ONCE, then ONLY Edit."
-                response_text += "\n   Plan the ENTIRE component first (imports, layout, data, charts)."
-                response_text += "\n   Write it ONCE. If build fails, use Edit to fix specific lines."
-                response_text += "\n   ❌ FORBIDDEN: Write → Read/head → Write/cat (wastes 60-110 seconds!)"
-                response_text += "\n   ✅ CORRECT: Write ONCE → Edit for any fix"
-                response_text += "\n"
-                response_text += "\n2. index.css — ONLY Edit to EXTEND :root (oklch only, keep @theme inline)."
-                response_text += "\n"
-                response_text += "\n3. Layout.tsx — ONLY Edit for APP_TITLE/APP_SUBTITLE."
-                response_text += "\n"
-                response_text += "\n4. CRUD files — Do NOT touch (*Page.tsx, *Dialog.tsx, ConfirmDialog, StatCard, PageShell)."
-                response_text += "\n"
-                response_text += "\n5. Bash is for commands ONLY (npm run build, git). NEVER use Bash to write/rewrite files."
-                response_text += "\n"
-                response_text += "\n6. ALL files below are IN FULL — do NOT use Read on any of them."
+                response_text += "\n2. DashboardOverview.tsx: Plan the ENTIRE component before writing:"
+                response_text += "\n   - Decide ALL imports (no unused imports!)"
+                response_text += "\n   - Decide the full layout (hero, KPIs, charts, table)"
                 response_text += "\n"
                 response_text += "\nSTEPS (in order):"
-                response_text += "\n  1. Edit index.css — EXTEND :root with your design tokens (oklch only!). Use Edit tool, not Write."
-                response_text += "\n  2. Edit APP_TITLE and APP_SUBTITLE in Layout.tsx (exact strings shown in Layout.tsx below)"
-                response_text += "\n  3. Write DashboardOverview.tsx ONCE (hero, KPIs, charts — plan fully first!)"
+                response_text += "\n  1. Edit index.css — EXTEND :root with your design tokens (oklch only!)"
+                response_text += "\n  2. Edit APP_TITLE and APP_SUBTITLE in Layout.tsx"
+                response_text += "\n  3. Write DashboardOverview.tsx (hero, KPIs, charts)"
                 if non_scaffolded:
                     response_text += f"\n  4. Build custom pages for: {', '.join(non_scaffolded)}"
                 response_text += f"\n  {'5' if non_scaffolded else '4'}. npm run build → fix errors → deploy_to_github"
                 response_text += f"\n{'='*60}\n"
             
             # ═══════════════════════════════════════════════════════
-            # FILE CONTENTS — FULL files so agent never needs Read
+            # FILE CONTENTS — key files included for reference
             # ═══════════════════════════════════════════════════════
-            # Include key files inline (types + service are needed, Layout for APP_TITLE edit)
-            # NOTE: DashboardOverview.tsx and index.css are NOT included — agent writes/edits them itself.
-            # Including them caused a Read→Rewrite cycle where the agent kept "improving" its own output.
             key_files = ["src/types/app.ts", "src/services/livingAppsService.ts"]
             if crud_scaffolds:
-                key_files += ["src/App.tsx"]
-                # Layout.tsx: include FULL file so agent can Edit APP_TITLE/APP_SUBTITLE directly
+                key_files += ["src/App.tsx", "src/pages/DashboardOverview.tsx"]
                 layout_path = Path("src/components/Layout.tsx")
                 if layout_path.exists():
-                    response_text += f"\n\n{'='*60}\n📄 src/components/Layout.tsx (edit APP_TITLE/APP_SUBTITLE directly)\n{'='*60}\n{layout_path.read_text()}"
+                    response_text += f"\n\n{'='*60}\n📄 src/components/Layout.tsx\n{'='*60}\n{layout_path.read_text()}"
+            
+            css_path = Path("src/index.css")
+            if css_path.exists():
+                response_text += f"\n\n{'='*60}\n📄 src/index.css\n{'='*60}\n{css_path.read_text()}"
             
             for fpath in key_files:
                 fp = Path(fpath)
@@ -553,8 +539,7 @@ async def main():
             
             if not crud_scaffolds:
                 response_text += f"\n\nGenerated types for: {', '.join(app_names)}"
-                response_text += "\n\n⚡ KEY FILES ARE ABOVE — do NOT re-read them. Start coding immediately."
-                response_text += "\n🚨 WRITE ONCE: Write each file ONCE. Do NOT write, read back, then rewrite."
+                response_text += "\n\n⚡ Key files are included above. Start coding immediately."
             
             return {"content": [{"type": "text", "text": response_text}]}
             
@@ -580,31 +565,11 @@ async def main():
 
     # 3. Optionen konfigurieren
     # setting_sources=["project"] is REQUIRED to load CLAUDE.md and .claude/skills/ from cwd
-    # NOTE: We use a CUSTOM system prompt instead of the claude_code preset.
-    # The claude_code preset contains instructions like "read files before editing"
-    # which conflict with our performance rules and cause the agent to re-read
-    # files it already has in context, triggering unnecessary rewrites.
     options = ClaudeAgentOptions(
-        system_prompt=(
-            "You are a senior frontend developer building React dashboards.\n"
-            "You work in /home/user/app which is a Vite + React + TypeScript project.\n\n"
-            "## ⛔ READ TOOL RESTRICTION\n"
-            "Do NOT use the Read tool on any file that:\n"
-            "- You just wrote or edited (its content is already in your conversation)\n"
-            "- Was provided in a tool response (generate_typescript includes full file contents)\n"
-            "- Is a scaffold file (*Page.tsx, *Dialog.tsx, ConfirmDialog, StatCard, PageShell)\n"
-            "You already have the content. Reading it again wastes time and leads to unnecessary rewrites.\n"
-            "Only use Read on files you have NEVER seen and that were NOT provided to you.\n\n"
-            "## ⛔ REWRITING FILES IS FORBIDDEN\n"
-            "After a file exists, the ONLY way to change it is Edit (old_string → new_string).\n"
-            "- ❌ FORBIDDEN: Write on existing file (wastes 30-50s to regenerate)\n"
-            "- ❌ FORBIDDEN: Bash cat/heredoc/echo to rewrite files\n"
-            "- ❌ FORBIDDEN: Read a file you just wrote, then Write it again\n"
-            "- ✅ ONLY: Edit tool for targeted changes (2-3s)\n\n"
-            "DashboardOverview.tsx: Write ONCE, then only Edit.\n"
-            "index.css, Layout.tsx: Only Edit, never Write.\n"
-            "CRUD scaffolds: Do not touch.\n"
-        ),
+        system_prompt={
+            "type": "preset",
+            "preset": "claude_code"
+        },
         setting_sources=["project"],  # Required: loads CLAUDE.md and .claude/skills/
         mcp_servers={"dashboard_tools": dashboard_tools_server},
         permission_mode="acceptEdits",
@@ -626,6 +591,8 @@ async def main():
 
     # User Prompt - prefer file over env var (handles special chars better)
     user_prompt = None
+    
+    # First try reading from file (more reliable for special chars like umlauts)
     prompt_file = "/home/user/app/.user_prompt"
     if os.path.exists(prompt_file):
         try:
@@ -635,6 +602,8 @@ async def main():
                 print(f"[LILO] Prompt aus Datei gelesen: {len(user_prompt)} Zeichen")
         except Exception as e:
             print(f"[LILO] Fehler beim Lesen der Prompt-Datei: {e}")
+    
+    # Fallback to env var (for backwards compatibility)
     if not user_prompt:
         user_prompt = os.getenv('USER_PROMPT')
         if user_prompt:
@@ -658,18 +627,19 @@ User-Anfrage: "{user_prompt}"
 
 PFLICHT-SCHRITTE (alle müssen ausgeführt werden):
 
-1. ÄNDERN: Implementiere die User-Anfrage mit dem Edit-Tool (gezielte Änderungen, NICHT ganze Dateien neu schreiben!)
-2. TESTEN: Führe 'npm run build' aus um sicherzustellen dass es kompiliert
-3. DEPLOYEN: Rufe deploy_to_github auf um die Änderungen zu pushen
+1. LESEN: Lies src/pages/Dashboard.tsx um die aktuelle Struktur zu verstehen
+2. ÄNDERN: Implementiere die User-Anfrage mit dem Edit-Tool
+3. TESTEN: Führe 'npm run build' aus um sicherzustellen dass es kompiliert
+4. DEPLOYEN: Rufe deploy_to_github auf um die Änderungen zu pushen
 
 ⚠️ KRITISCH:
 - Du MUSST Änderungen am Code machen (Edit-Tool verwenden!)
 - Du MUSST am Ende deploy_to_github aufrufen!
 - Beende NICHT ohne zu deployen!
-- Lies KEINE Dateien die du schon im Context hast oder die du selbst geschrieben hast!
+- Analysieren alleine reicht NICHT - du musst HANDELN!
 
 Das Dashboard existiert bereits. Mache NUR die angeforderten Änderungen, nicht mehr.
-Starte JETZT!"""
+Starte JETZT mit Schritt 1!"""
         print(f"[LILO] Continue-Mode mit User-Prompt: {user_prompt}")
     else:
         # Normal-Mode: Neues Dashboard bauen

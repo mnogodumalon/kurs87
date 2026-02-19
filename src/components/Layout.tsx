@@ -3,8 +3,8 @@ import { BookOpen, ClipboardList, DoorOpen, GraduationCap, LayoutDashboard, Menu
 import { useState } from 'react';
 
 // ⚡ Customize these for your app
-const APP_TITLE = 'KursManager';
-const APP_SUBTITLE = 'Kursverwaltung';
+const APP_TITLE = 'KursVerwaltung';
+const APP_SUBTITLE = 'Bildungsmanagement';
 
 const navigation = [
   { name: 'Übersicht', href: '/', icon: LayoutDashboard },
